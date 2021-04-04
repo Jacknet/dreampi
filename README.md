@@ -18,6 +18,8 @@ As root, operate the DreamPi service using the following command:<br>
 
 The `interface` parameter corresponds to your network device, such as `eth0` or `wlan0`. Check `ifconfig` to know your network device's name.
 
+You do not need to define your network interface if you are stopping the service.
+
 ---
 
 Original by @Kazade

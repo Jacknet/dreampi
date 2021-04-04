@@ -667,11 +667,17 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         if sys.argv[1] == "start":
             daemon.start()
-        elif sys.argv[1] == "stop":
-            daemon.stop()
         elif sys.argv[1] == "restart":
             daemon.restart()
         else:
+            print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
+            sys.exit(2)
+        sys.exit(0)
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "stop":
+            daemon.stop()
+        else:
+            print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
             sys.exit(2)
         sys.exit(0)
     else:
