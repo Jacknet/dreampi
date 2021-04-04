@@ -1,5 +1,5 @@
 # dreampi
-An environment-agnostic fork of [DreamPi](https://github.com/Kazade/dreampi) which can run on any GNU/Linux flavor that can run Python 2.7.
+An environment-agnostic fork of [DreamPi](https://github.com/Kazade/dreampi) which can run on most GNU/Linux flavors that can run Python 2.7, optimized for use with devices outside of a Dreamcast.
 
 ## Prerequisites
 Install the following dependencies through PIP:
