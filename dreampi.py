@@ -23,7 +23,7 @@ from port_forwarding import PortForwarding
 from datetime import datetime, timedelta
 
 
-DNS_FILE = "https://dreamcast.online/dreampi/dreampi_dns.conf"
+DNS_FILE = "https://raw.githubusercontent.com/Jacknet/dreampi/master/etc/dnsmasq.conf"
 
 
 logger = logging.getLogger('dreampi')
@@ -73,6 +73,9 @@ def update_dns_file():
         # Update the configuration
         with open("/etc/dnsmasq.d/dreampi.conf", "w") as f:
             f.write(response.read())
+
+        ### THIS PART HERE SHOULD COPY THAT dreampi.conf AND USE THAT AS YOUR ACTUAL dnsmasq.conf.
+        ### Ensure original system dnsmasq.conf gets backed up to a .bak too.
 
         # Start the server again
         subprocess.check_call("sudo service dnsmasq start".split())
@@ -324,7 +327,7 @@ class Daemon(object):
 
         try:
             while True:
-                os.kill(pid, signal.SIGTERM)
+                os.kill(pid, signal.SIGABRT)  ### Use SIGABRT instead of SIGTERM
                 time.sleep(0.1)
 
         except OSError:
@@ -427,7 +430,8 @@ class Modem(object):
         self.send_command("ATA", ignore_responses=["OK"])
         time.sleep(5)
         logger.info("Call answered!")
-        logger.info(subprocess.check_output(["pon", "dreamcast"]))
+        ### No need to log this cus it may raise an exception!
+        #logger.info(subprocess.check_output(["pon", "dreamcast"]))
         logger.info("Connected")
 
     def send_command(self, command, timeout=60, ignore_responses=None):
@@ -567,6 +571,7 @@ def process():
                 except (TypeError, ValueError):
                     pass
         elif mode == "ANSWERING":
+            # MAY NEED TO BE 2 SECONDS?
             if (now - time_digit_heard).total_seconds() > 8.0:
                 time_digit_heard = None
                 modem.answer()
@@ -574,7 +579,7 @@ def process():
                 mode = "CONNECTED"
 
         elif mode == "CONNECTED":
-            dcnow.go_online(dreamcast_ip)
+            #dcnow.go_online(dreamcast_ip)
 
             # We start watching /var/log/messages for the hang up message
             for line in sh.tail("-f", "/var/log/messages", "-n", "1", _iter=True):
@@ -583,7 +588,7 @@ def process():
                     time.sleep(5)  # Give the hangup some time
                     break
 
-            dcnow.go_offline()
+            #dcnow.go_offline()
 
             mode = "LISTENING"
             modem = Modem(device_and_speed[0], device_and_speed[1], dial_tone_enabled)
@@ -605,7 +610,8 @@ def enable_prom_mode_on_wlan0():
     """
 
     try:
-        subprocess.check_call("sudo ifconfig wlan0 promisc".split())
+        ifconfig_cmd = "sudo ifconfig " + sys.argv[2] + " promisc" # Set to user-provided interface
+        subprocess.check_call(ifconfig_cmd.split())
         logging.info("Promiscuous mode set on wlan0")
     except subprocess.CalledProcessError:
         logging.info("Attempted to set promiscuous mode on wlan0 but was unsuccessful")
@@ -628,20 +634,20 @@ def main():
         # Just make sure everything is fine
         restart_dnsmasq()
 
-        config_server.start()
-        start_afo_patching()
-        start_process("dcvoip")
-        start_process("dcgamespy")
-        start_process("dc2k2")
+        #config_server.start()
+        #start_afo_patching()
+        #start_process("dcvoip")
+        #start_process("dcgamespy")
+        #start_process("dc2k2")
         return process()
     except:
         logger.exception("Something went wrong...")
         return 1
     finally:
-        stop_process("dc2k2")
-        stop_process("dcgamespy")
-        stop_process("dcvoip")
-        stop_afo_patching()
+        #stop_process("dc2k2")
+        #stop_process("dcgamespy")
+        #stop_process("dcvoip")
+        #stop_afo_patching()
 
         config_server.stop()
         logger.info("Dreampi quit successfully")
@@ -658,7 +664,7 @@ if __name__ == '__main__':
 
     daemon = Daemon("/tmp/dreampi.pid", main)
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         if sys.argv[1] == "start":
             daemon.start()
         elif sys.argv[1] == "stop":
@@ -669,5 +675,5 @@ if __name__ == '__main__':
             sys.exit(2)
         sys.exit(0)
     else:
-        print("Usage: %s start|stop|restart" % sys.argv[0])
+        print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
         sys.exit(2)
