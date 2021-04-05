@@ -613,7 +613,8 @@ def enable_prom_mode_on_wlan0():
     """
 
     try:
-        subprocess.check_call("sudo ifconfig " + sys.argv[2] + " promisc".split())
+        ifconfig_cmd = "sudo ifconfig " + sys.argv[2] + " promisc" # Set to user-provided interface
+        subprocess.check_call(ifconfig_cmd.split())
         logging.info("Promiscuous mode set on wlan0")
     except subprocess.CalledProcessError:
         logging.info("Attempted to set promiscuous mode on wlan0 but was unsuccessful")
