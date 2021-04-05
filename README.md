@@ -16,8 +16,8 @@ Copy the `dnsmasq.conf` file in the `etc` directory of this repo to your target 
 
 ## Usage
 As root, operate the DreamPi service using either the following commands:<br>
-`python2 dreampi.py [start|stop|restart] interface`<br>
-`./dreampi.py [start|stop|restart] interface`
+`./dreampi.py [start|stop|restart] interface`<br>
+`python(2) dreampi.py [start|stop|restart] interface`
 
 The `interface` parameter corresponds to your network device, such as `eth0` or `wlan0`. Check `ifconfig` to know your network device's name.
 

@@ -367,9 +367,9 @@ class Modem(object):
         return self._device
 
     def _read_dial_tone(self):
-        this_dir = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
-        dial_tone_wav = os.path.join(this_dir, "dial-tone.wav")
-
+        #this_dir = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
+        #dial_tone_wav = os.path.join(this_dir, "dial-tone.wav")
+        dial_tone_wav = os.path.join(sys.path[0], "dial-tone.wav")
         with open(dial_tone_wav, "rb") as f:
             dial_tone = f.read()  # Read the entire wav file
             dial_tone = dial_tone[44:]  # Strip the header (44 bytes)
