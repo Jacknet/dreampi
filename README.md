@@ -2,7 +2,7 @@
 An environment-agnostic fork of [DreamPi](https://github.com/Kazade/dreampi) which can run on most GNU/Linux flavors that can run Python 2.7, optimized for use with devices outside of a Dreamcast.
 
 ## Prerequisites
-Ensure your distro can utilize a PPP daemon (`pppd`), either supplied by a Linux kernel compiled to support PPP or through other means. Otherwise, a network would not be established and your connection will terminate.
+Ensure your distro's kernel is compiled to support PPP and can utilize the PPP daemon (`pppd`). Otherwise, a network would not be established between the host and client systems and your connection will terminate.
 
 Install the following dependencies through PIP:
 1. pyserial
@@ -12,7 +12,7 @@ Install the following dependencies through PIP:
 
 Set a `XTABLES_LIBDIR` environment variable to the location containing your xtables libraries (e.g. `/usr/lib64/xtables/`).
 
-This program will use `dnsmasq` as the DNS daemon. More modern variants of GNU/Linux use `systemd-resolved`, which may end up reserving certain service ports. Please make sure to set `dnsmasq` for DNS service when possible.
+This program will use `dnsmasq` as the DNS daemon. More modern variants of GNU/Linux use `systemd-resolved`, which may end up reserving certain service ports. Stop other name resolution services before starting the DreamPi service, leaving just `dnsmasq` during execution.
 
 Copy the `dnsmasq.conf` file in the `etc` directory of this repo to your target system's `/etc/` directory. Make sure to back up any existing `dnsmasq.conf` in there or rename it by appending a `.bak` to the file name.
 
