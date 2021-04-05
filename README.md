@@ -2,13 +2,15 @@
 An environment-agnostic fork of [DreamPi](https://github.com/Kazade/dreampi) which can run on most GNU/Linux flavors that can run Python 2.7, optimized for use with devices outside of a Dreamcast.
 
 ## Prerequisites
+Ensure your distro can utilize a PPP daemon (`pppd`), either supplied by a Linux kernel compiled to support PPP or through other means. Otherwise, a network would not be established and your connection will terminate.
+
 Install the following dependencies through PIP:
 1. pyserial
 1. sh
 1. python-iptables
 1. miniupnpc
 
-Make sure to set a `XTABLES_LIBDIR` environment variable to the location containing your xtables libraries (e.g. `/usr/lib64/xtables/`).
+Set a `XTABLES_LIBDIR` environment variable to the location containing your xtables libraries (e.g. `/usr/lib64/xtables/`).
 
 This program will use `dnsmasq` as the DNS daemon. More modern variants of GNU/Linux use `systemd-resolved`, which may end up reserving certain service ports. Please make sure to set `dnsmasq` for DNS service when possible.
 
