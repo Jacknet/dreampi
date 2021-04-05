@@ -15,8 +15,9 @@ This program will use `dnsmasq` as the DNS daemon. More modern variants of GNU/L
 Copy the `dnsmasq.conf` file in the `etc` directory of this repo to your target system's `/etc/` directory. Make sure to back up any existing `dnsmasq.conf` in there or rename it by appending a `.bak` to the file name.
 
 ## Usage
-As root, operate the DreamPi service using the following command:<br>
-`sudo python2 dreampi.py [start|stop|restart] interface`
+As root, operate the DreamPi service using either the following commands:<br>
+`python2 dreampi.py [start|stop|restart] interface`<br>
+`./dreampi.py [start|stop|restart] interface`
 
 The `interface` parameter corresponds to your network device, such as `eth0` or `wlan0`. Check `ifconfig` to know your network device's name.
 
