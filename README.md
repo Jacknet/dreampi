@@ -10,6 +10,8 @@ Install the following dependencies through PIP:
 
 Make sure to set a `XTABLES_LIBDIR` environment variable to the location containing your xtables libraries (e.g. `/usr/lib64/xtables/`).
 
+This program will use `dnsmasq` as the DNS daemon. More modern variants of GNU/Linux use `systemd-resolved`, which may end up reserving certain service ports. Please make sure to set `dnsmasq` for DNS service when possible.
+
 Copy the `dnsmasq.conf` file in the `etc` directory of this repo to your target system's `/etc/` directory. Make sure to back up any existing `dnsmasq.conf` in there or rename it by appending a `.bak` to the file name.
 
 ## Usage
