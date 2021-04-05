@@ -34,7 +34,7 @@ def check_internet_connection():
 
     IP_ADDRESS_LIST = [
         "1.1.1.1",  # Cloudflare
-        "1.0.0.1",
+        "1.0.0.1", 
         "8.8.8.8",  # Google DNS
         "8.8.4.4",
         "208.67.222.222",  # Open DNS
@@ -226,41 +226,9 @@ noccp
     return dreamcast_ip
 
 
-ENABLE_SPEED_DETECTION = False  # Set this to true if you want to use wvdialconf for device detection
-
-
 def detect_device_and_speed():
-    MAX_SPEED = 57600
-
-    if not ENABLE_SPEED_DETECTION:
-        # By default we don't detect the speed or device as it's flakey in later
-        # Pi kernels. But it might be necessary for some people so that functionality
-        # can be enabled by setting the flag above to True
-        return ("ttyACM0", MAX_SPEED)
-
-    command = ["wvdialconf", "/dev/null"]
-
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
-
-        lines = output.split("\n")
-
-        for line in lines:
-            match = re.match("(.+)\<Info\>\:\sSpeed\s(\d+);", line.strip())
-            if match:
-                device = match.group(1)
-                speed = match.group(2)
-                logger.info("Detected device {} with speed {}".format(device, speed))
-
-                # Many modems report speeds higher than they can handle so we cap
-                # to 56k
-                return device, min(speed, MAX_SPEED)
-        else:
-            logger.info("No device detected")
-
-    except:
-        logger.exception("Unable to detect modem. Falling back to ttyACM0")
-    return ("ttyACM0", MAX_SPEED)
+    MAX_SPEED = 230400
+    return ("ttyUSB0", MAX_SPEED)
 
 
 class Daemon(object):
@@ -381,7 +349,6 @@ class Modem(object):
         self._serial = serial.Serial(
             "/dev/{}".format(self._device), self._speed, timeout=0
         )
-
     def disconnect(self):
         if self._serial and self._serial.isOpen():
             self._serial.close()
@@ -389,9 +356,7 @@ class Modem(object):
             logger.info("Serial interface terminated")
 
     def reset(self):
-        self.send_command("ATZ0")  # Send reset command
-        self.send_command("ATE0")  # Don't echo our responses
-
+        return
     def start_dial_tone(self):
         if not self._dial_tone_wav:
             return
@@ -399,11 +364,11 @@ class Modem(object):
         self.reset()
         self.send_command("AT+FCLASS=8")  # Enter voice mode
         self.send_command("AT+VLS=1")  # Go off-hook
-        self.send_command("AT+VSM=1,8000")  # 8 bit unsigned PCM
+        self.send_command("AT+VSM=130")  # 8 bit unsigned PCM
         self.send_command("AT+VTX")  # Voice transmission mode
 
         self._sending_tone = True
-
+       
         self._time_since_last_dial_tone = (
             datetime.now() - timedelta(seconds=100)
         )
@@ -424,7 +389,6 @@ class Modem(object):
         self.reset()
         # When we send ATA we only want to look for CONNECT. Some modems respond OK then CONNECT
         # and that messes everything up
-        #self.send_command("AT+MS=56,0")
         self.send_command("ATA", ignore_responses=["OK"])
         time.sleep(5)
         logger.info("Call answered!")
@@ -528,20 +492,20 @@ def process():
 
     # Get a port forwarding object, now that we know the DC IP.
     # port_forwarding = PortForwarding(dreamcast_ip, logger)
-
-    # Disabled until we can figure out a faster way of doing this.. it takes a minute
+    
+    # Disabled until we can figure out a faster way of doing this.. it takes a minute 
     # on my router which is way too long to wait for the DreamPi to boot
     # port_forwarding.forward_all()
 
     mode = "LISTENING"
 
     modem.connect()
+    #///////////////////////////////
+    #hack for actiontec usb modem
+    #///////////////////////////////
+    time.sleep(5) 
+    modem.answer()
 
-    #////////////////////////////////////////
-    #HACK FOR actiontec modem
-    if len(sys.argv) > 1 and "--immediate-answer" in sys.argv:
-        modem.answer()
-    #////////////////////////////////////////
 
     if dial_tone_enabled:
         modem.start_dial_tone()
@@ -575,14 +539,14 @@ def process():
                 except (TypeError, ValueError):
                     pass
         elif mode == "ANSWERING":
-            if (now - time_digit_heard).total_seconds() > 2.0:
+            if (now - time_digit_heard).total_seconds() > 8.0:
                 time_digit_heard = None
                 modem.answer()
                 modem.disconnect()
                 mode = "CONNECTED"
 
         elif mode == "CONNECTED":
-            #######dcnow.go_online(dreamcast_ip)
+            dcnow.go_online(dreamcast_ip)
 
             # We start watching /var/log/messages for the hang up message
             for line in sh.tail("-f", "/var/log/messages", "-n", "1", _iter=True):
@@ -591,14 +555,13 @@ def process():
                     time.sleep(5)  # Give the hangup some time
                     break
 
-            #######dcnow.go_offline()
+            dcnow.go_offline()
 
             mode = "LISTENING"
             modem = Modem(device_and_speed[0], device_and_speed[1], dial_tone_enabled)
             modem.connect()
             if dial_tone_enabled:
                 modem.start_dial_tone()
-
     # Temporarily disabled, see above
     # port_forwarding.delete_all()
     return 0
@@ -636,20 +599,20 @@ def main():
         # Just make sure everything is fine
         restart_dnsmasq()
 
-        #######config_server.start()
-        #######start_afo_patching()
-        #######start_process("dcvoip")
-        #######start_process("dcgamespy")
-        #######start_process("dc2k2")
+       # config_server.start()
+        #start_afo_patching()
+      #  start_process("dcvoip")
+        #start_process("dcgamespy")
+        #start_process("dc2k2")
         return process()
     except:
         logger.exception("Something went wrong...")
         return 1
     finally:
-        #######stop_process("dc2k2")
-        #######stop_process("dcgamespy")
-        #######stop_process("dcvoip")
-        #######stop_afo_patching()
+        #stop_process("dc2k2")
+        #stop_process("dcgamespy")
+        #stop_process("dcvoip")
+        #stop_afo_patching()
 
         config_server.stop()
         logger.info("Dreampi quit successfully")
