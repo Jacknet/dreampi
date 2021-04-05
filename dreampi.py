@@ -23,8 +23,7 @@ from port_forwarding import PortForwarding
 from datetime import datetime, timedelta
 
 
-DNS_FILE = "https://dreamcast.online/dreampi/dreampi_dns.conf"
-
+DNS_FILE = "https://raw.githubusercontent.com/Jacknet/dreampi/master/etc/dnsmasq.conf"
 
 logger = logging.getLogger('dreampi')
 
@@ -156,7 +155,7 @@ def get_default_iface_name_linux():
 
 
 def ip_exists(ip, iface):
-    command = ["arp", "-a"]
+    command = ["arp", "-a", "-i", iface]
     output = subprocess.check_output(command)
     if ("(%s)" % ip) in output:
         logger.info("IP existed at %s", ip)
@@ -324,7 +323,7 @@ class Daemon(object):
 
         try:
             while True:
-                os.kill(pid, signal.SIGTERM)
+                os.kill(pid, signal.SIGABRT)  ### Use SIGABRT instead of SIGTERM
                 time.sleep(0.1)
 
         except OSError:
@@ -364,9 +363,9 @@ class Modem(object):
         return self._device
 
     def _read_dial_tone(self):
-        this_dir = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
-        dial_tone_wav = os.path.join(this_dir, "dial-tone.wav")
-
+        #this_dir = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
+        #dial_tone_wav = os.path.join(this_dir, "dial-tone.wav")
+        dial_tone_wav = os.path.join(sys.path[0], "dial-tone.wav")
         with open(dial_tone_wav, "rb") as f:
             dial_tone = f.read()  # Read the entire wav file
             dial_tone = dial_tone[44:]  # Strip the header (44 bytes)
@@ -428,7 +427,8 @@ class Modem(object):
         self.send_command("ATA", ignore_responses=["OK"])
         time.sleep(5)
         logger.info("Call answered!")
-        logger.info(subprocess.check_output(["pon", "dreamcast"]))
+        ### No need to log this cus it may raise an exception!
+        #logger.info(subprocess.check_output(["pon", "dreamcast"]))
         logger.info("Connected")
 
     def send_command(self, command, timeout=60, ignore_responses=None):
@@ -613,7 +613,7 @@ def enable_prom_mode_on_wlan0():
     """
 
     try:
-        subprocess.check_call("sudo ifconfig wlan0 promisc".split())
+        subprocess.check_call("sudo ifconfig " + sys.argv[2] + " promisc".split())
         logging.info("Promiscuous mode set on wlan0")
     except subprocess.CalledProcessError:
         logging.info("Attempted to set promiscuous mode on wlan0 but was unsuccessful")
@@ -666,16 +666,22 @@ if __name__ == '__main__':
 
     daemon = Daemon("/tmp/dreampi.pid", main)
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         if sys.argv[1] == "start":
             daemon.start()
-        elif sys.argv[1] == "stop":
-            daemon.stop()
         elif sys.argv[1] == "restart":
             daemon.restart()
         else:
+            print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
+            sys.exit(2)
+        sys.exit(0)
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "stop":
+            daemon.stop()
+        else:
+            print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
             sys.exit(2)
         sys.exit(0)
     else:
-        print("Usage: %s start|stop|restart" % sys.argv[0])
+        print("Usage: %s [start|stop|restart] interface" % sys.argv[0])
         sys.exit(2)
